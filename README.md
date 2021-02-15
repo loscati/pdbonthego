@@ -1,4 +1,4 @@
-# PDBontheGo
+# PDBontheGō
 Set of functions used to extract parameters from a PDB file in order to construct a coarse-grained Gō-model of the analyzed protein, such as bond lengths, dihedral angles, contact map etc.
 
 Functions are grouped into four files characterized as follow:
