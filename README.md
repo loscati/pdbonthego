@@ -39,3 +39,6 @@ contact_map = cm.get_contact_map(path_pdb, threshold, altloc, model, chain, resi
 
 In order to select the right model-chain-altloc you have to know the structure of a PDB file, [this site](https://pdb101.rcsb.org/) contain a complete introduction to this type of files.
 More info about how `parser`, and all other function which uses it, handle these arguments can be found in the *The Structure Object* section of the [Bio.PDB package](https://biopython.org/wiki/The_Biopython_Structural_Bioinformatics_FAQ).
+
+## Tests
+The package is tested with Python $3.8$ and `biopython` version $1.78$
