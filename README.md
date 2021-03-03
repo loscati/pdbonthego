@@ -41,4 +41,4 @@ In order to select the right model-chain-altloc you have to know the structure o
 More info about how `parser`, and all other function which uses it, handle these arguments can be found in the *The Structure Object* section of the [Bio.PDB package](https://biopython.org/wiki/The_Biopython_Structural_Bioinformatics_FAQ).
 
 ## Tests
-The package is tested with Python $3.8$ and `biopython` version $1.78$
+The package is tested with Python 3.8 and `biopython` version 1.78
