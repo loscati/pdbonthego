@@ -42,3 +42,6 @@ More info about how `parser`, and all other function which uses it, handle these
 
 ## Tests
 The package is tested with Python 3.8 and `biopython` version 1.78
+
+## TODO
+- [ ] create a `setup.py` file 
