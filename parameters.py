@@ -1,13 +1,18 @@
 import math
+from typing import List
 
 import numpy as np
 
-import parser
-import contactmap as cm
-import tester
+from .parser import get_residues
+from .contactmap import get_contact_map
 
-
-def get_residue_dists(file, altloc='A', mod=0, ch=0, first_to_remove=0) -> list:
+def get_residue_dists(
+    file: str, 
+    altloc: str ='A', 
+    mod: int=0, 
+    ch: int=0, 
+    first_to_remove:int =0
+    ) -> List[List[float]]:
     '''Distances between C_alpha atoms of subsequent residues
     This corresponds to harmonic bond terms in the Go-like Hamiltonian
 
@@ -24,7 +29,7 @@ def get_residue_dists(file, altloc='A', mod=0, ch=0, first_to_remove=0) -> list:
         list: list of the distances between C_alpha atoms
     '''
 
-    res_list = parser.get_residues(file, mod, ch, first_to_remove)
+    res_list = get_residues(file, mod, ch, first_to_remove)
     calpha_dists = []
     for i in range(1, len(res_list)):
         Ca0 = res_list[i-1]['CA']
@@ -43,7 +48,13 @@ def get_residue_dists(file, altloc='A', mod=0, ch=0, first_to_remove=0) -> list:
     return calpha_dists
 
 
-def get_disulfide_bonds(file, altloc='A', mod=0, ch=0, first_to_remove=0) -> list:
+def get_disulfide_bonds(
+    file: str, 
+    altloc: str ='A', 
+    mod: int=0, 
+    ch: int=0, 
+    first_to_remove:int =0
+    ) -> List[float]:
     '''Disulfide bridges bond lengths
     It search for pair of Cysteines if present in the chain
 
@@ -60,7 +71,7 @@ def get_disulfide_bonds(file, altloc='A', mod=0, ch=0, first_to_remove=0) -> lis
         list: list of disulfide bond lengths
     '''
 
-    res_list = parser.get_residues(file, mod, ch, first_to_remove)
+    res_list = get_residues(file, mod, ch, first_to_remove)
     cys_list = []
     # Checking for pairs of Cysteins
     for res in res_list:
@@ -85,8 +96,14 @@ def get_disulfide_bonds(file, altloc='A', mod=0, ch=0, first_to_remove=0) -> lis
     return dis_bridges
 
 
-def get_residues_angles(file, altloc='A', mod=0, ch=0, first_to_remove=0,
-                        degrees=True) -> list:
+def get_residues_angles(
+    file: str, 
+    altloc: str ='A', 
+    mod: int=0, 
+    ch: int=0, 
+    first_to_remove:int =0,
+    degrees: bool =True
+    ) -> List[float]:
     '''Angles between successive residues, hence C_alpha
 
     Angle definition involves three successive C_alphas and makes use of the
@@ -114,7 +131,7 @@ def get_residues_angles(file, altloc='A', mod=0, ch=0, first_to_remove=0,
         list: list of angles in radians or degrees
     '''
 
-    res_list = parser.get_residues(file, mod, ch, first_to_remove)
+    res_list = get_residues(file, mod, ch, first_to_remove)
     angles = []
     for i in range(1, len(res_list) - 1):
         Ca0 = res_list[i-1]['CA']
@@ -146,8 +163,14 @@ def get_residues_angles(file, altloc='A', mod=0, ch=0, first_to_remove=0,
     return angles
 
 
-def get_residues_dih(file, altloc='A', mod=0, ch=0, first_to_remove=0,
-                    degrees=True) -> list:
+def get_residues_dih(
+    file: str, 
+    altloc: str ='A', 
+    mod: int=0, 
+    ch: int=0, 
+    first_to_remove:int =0,
+    degrees: bool =True
+    ) -> List[float]:
     '''Dihedral angles between successive residues
 
     For details about the computation see:
@@ -168,7 +191,7 @@ def get_residues_dih(file, altloc='A', mod=0, ch=0, first_to_remove=0,
         list: list of dihedral angles in radians or degrees
     '''
 
-    res_list = parser.get_residues(file, mod, ch, first_to_remove)
+    res_list = get_residues(file, mod, ch, first_to_remove)
     dihedrals = []
     for i in range(2, len(res_list) - 1):
         Ca0 = res_list[i-2]['CA']
@@ -204,8 +227,14 @@ def get_residues_dih(file, altloc='A', mod=0, ch=0, first_to_remove=0,
     return dihedrals
 
 
-def save_parameters(file, threshold, altloc='A', mod=0, ch=0,
-                    first_to_remove=0, degrees=True) -> None:
+def save_parameters(
+    file: str, 
+    altloc: str ='A', 
+    mod: int=0, 
+    ch: int=0, 
+    first_to_remove:int =0, 
+    degrees: bool =True
+    ) -> None:
     '''Save on a .dat file all parameters for the Go-like hamiltonian.
     For example is the pdb file name is "1ucs.pdb" and the configuration
     chosed is 'A', then all parameters are saved in the "1ucs-A.dat" file
@@ -227,7 +256,7 @@ def save_parameters(file, threshold, altloc='A', mod=0, ch=0,
         None
     '''
 
-    res_list = parser.get_residues(file, mod, ch, first_to_remove)
+    res_list = get_residues(file, mod, ch, first_to_remove)
     dist = get_residue_dists(file, altloc=altloc,
                             first_to_remove=first_to_remove)
     disulfide = get_disulfide_bonds(file, altloc=altloc,
@@ -238,12 +267,12 @@ def save_parameters(file, threshold, altloc='A', mod=0, ch=0,
     dih = get_residues_dih(file, altloc=altloc,
                             first_to_remove=first_to_remove,
                             degrees=degrees)
-    # contact_map = cm.get_contact_map(file, altloc=altloc,
-    #                                 threshold=threshold,
-    #                                 first_to_remove=first_to_remove)
+    # contact_map = get_contact_map(file, altloc=altloc,
+    #                               threshold=threshold,
+    #                               first_to_remove=first_to_remove)
 
     name_protein = file[-8:-4] # get unique protein ID of 4 characters
-    import json
+    
     with open(f'{name_protein}-{altloc}.dat', 'w') as fout:
         # Info about the file
         fout.write(f'INFO\nProtein: {name_protein},\nAltloc: {altloc},\nNumber of residues removed in the beginning: {first_to_remove},\nModel number: {mod},\nChain number: {ch},\n')
@@ -281,8 +310,4 @@ def save_parameters(file, threshold, altloc='A', mod=0, ch=0,
 
 
 if __name__ == '__main__':
-    # tester.parameters_dist()
-    # tester.parameters_disulfide()
-    # tester.parameters_angles()
-    # tester.parameters_dih()
-    tester.save_para()
+    pass
