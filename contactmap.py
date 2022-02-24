@@ -1,16 +1,18 @@
-import math
-
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-import parser
-import parameters
-import tester
+from .parser import get_residues
 
-def get_contact_map(file, threshold, altloc='A', mod=0, ch=0,
-                    first_to_remove=0) -> '2D numpy array':
+def get_contact_map(
+    file: str, 
+    threshold: float, 
+    altloc: str ='A', 
+    mod:int =0, 
+    ch: int =0,
+    first_to_remove: int =0
+    ) -> np.ndarray:
     '''2D map of distances between C_alphas which have, in their residue, at
     least a pair of heavy atoms closer than threshold
 
@@ -35,7 +37,7 @@ def get_contact_map(file, threshold, altloc='A', mod=0, ch=0,
         placed at the bottom left. Moreover, the matrix is symmetric w.r.t.
         the anti-diagonal
     '''
-    res_list = parser.get_residues(file, mod, ch, first_to_remove)
+    res_list = get_residues(file, mod, ch, first_to_remove)
     n = len(res_list)
     cm = np.zeros((n,n))
 
@@ -103,46 +105,62 @@ def get_contact_map(file, threshold, altloc='A', mod=0, ch=0,
     return cm
 
 
-def visualize_contact_map(cm, title) -> None:
+def visualize_contact_map(
+    cm: np.ndarray, 
+    cmap: str, 
+    title: str, 
+    reflected: bool =True
+    ) -> matplotlib.figure.Figure:
     '''Visualizing contact map cm using an heat map
 
     Args:
         cm (2D numpy array): contact map
+        cmpa (str): cmap selection passed to imshow
         title (str): title of the plot
 
     Returns:
-        None
-    '''
-    
-    matplotlib.rcParams.update({'font.size': 16})
+        Matplotlib Figure object
+    ''' 
+    matplotlib.rcParams.update({
+        'font.size': 30,
+        'text.usetex': True
+    })
 
-    fig, ax = plt.subplots()
-    ax.set_title(title, pad=15)
+    fig, ax = plt.subplots(figsize=(8,7))
+    ax.set_title(title, pad=10, fontsize=30)
 
-    # fix y ticks and labels: display tick and label every 10 residues
-    res_n = cm.shape[0]
-    fix_yloc = [i for i in range(res_n%5, res_n - res_n%5, 5)]
-    fix_ylabel = [i for i in range(res_n - res_n%5, res_n%5, -5)]
-    ax.set_yticks(fix_yloc)
-    ax.set_yticklabels(fix_ylabel)
+    if reflected:
+        # fix y ticks and labels: display tick and label every 10 residues
+        res_n = cm.shape[0]
+        fix_yloc = [i for i in range(res_n%5, res_n - res_n%5, 5)]
+        fix_ylabel = [i for i in range(res_n - res_n%5, res_n%5, -5)]
+        ax.set_yticks(fix_yloc)
+        ax.set_yticklabels(fix_ylabel, fontsize=20)
 
-    # x ticks and labels
-    ax.set_xticks([i for i in range(4, res_n, 5)])
-    ax.set_xticklabels([i for i in range(5, res_n, 5)])
+        # x ticks and labels
+        ax.set_xticks([i for i in range(4, res_n, 5)])
+        ax.set_xticklabels([i for i in range(5, res_n, 5)], fontsize=20)
+        
+        # Obtain standard representation of contact maps, e.g. [noel2016]:
+        im = ax.imshow(cm[::-1,:], cmap=cmap)
+    else:
+        im = ax.imshow(cm, cmap=cmap)   
 
-    ax.grid()
-    ax.set_xlabel('Residues')
-    ax.set_ylabel('Residues')
-    
-    # Obtain standard representation of contact maps, e.g. [noel2016]:
-    im = ax.imshow(cm[::-1,:], cmap = 'binary')
+
+    ax.grid(alpha=.5)
+    ax.set_xlabel('Residue index', labelpad=10)
+    ax.set_ylabel('Residue index', labelpad=10)
+
     # Lateral legend bar
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
-    fig.colorbar(im, ax=ax, cax=cax)
+    c = fig.colorbar(im, ax=ax, cax=cax)
+    c.set_label('\AA', rotation=0, labelpad=10)
 
     plt.show()
 
+    return fig
+
 
 if __name__ == '__main__':
-    tester.cm()
+    pass

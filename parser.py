@@ -1,11 +1,16 @@
+from typing import List
+
 import Bio.PDB as pdb
 from Bio.PDB.Selection import unfold_entities
 
-import tester
 # TODO: better handle warning by PDBParser (see github on PDB warning)
 
-
-def get_residues(file, mod, ch, first_to_remove) -> list:
+def get_residues(
+    file: str, 
+    mod: int, 
+    ch: int, 
+    first_to_remove: int
+    ) -> List[pdb.Residue.Residue]:
     '''Residues from pdb file
     It select only proteinogenic residues excluding all water molecules and
     ions.
@@ -50,4 +55,4 @@ def get_residues(file, mod, ch, first_to_remove) -> list:
 
 
 if __name__ == '__main__':
-    tester.parser()
+    pass
