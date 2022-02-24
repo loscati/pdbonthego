@@ -5,7 +5,6 @@ Functions are grouped into four files characterized as follow:
 + `parser` contains a wrapper to `Bio.PDB.PDBParser()` of the [Biopython project](https://biopython.org/wiki/The_Biopython_Structural_Bioinformatics_FAQ) used to extract only residues from the PDB file
 + `parameters` has functions to extract bond length, bond angles, dihedral angles and disulfite bonds
 + `contactmap` computes the native contact map as define [here](https://www.nature.com/articles/s41598-019-44928-3) and plots it.
-+ `tester` contains functions for debugging
 
 Each function has a detailed docstring explaning what it does, arguments and its result.
 
