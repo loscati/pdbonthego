@@ -4,7 +4,6 @@ from typing import List
 import numpy as np
 
 from .parser import get_residues
-from .contactmap import get_contact_map
 
 def get_residue_dists(
     file: str, 
@@ -112,7 +111,7 @@ def get_residues_angles(
     vec{dp} = vec{C_alpha^{i+1}} - vec{C_alpha^{i}}
     theta_i^0 = pi - acos( (dr_{i-1,i} \dot dr_{i,i+1})/modules )
 
-    pi - acos() is used becaused we do not need the angle as defined by the
+    pi - acos() is used because we do not need the angle as defined by the
     dot product, instead we seek the angle form by the 'bending' of two
     subsequent residues (described by their C_alpha).
 
@@ -237,7 +236,7 @@ def save_parameters(
     ) -> None:
     '''Save on a .dat file all parameters for the Go-like hamiltonian.
     For example is the pdb file name is "1ucs.pdb" and the configuration
-    chosed is 'A', then all parameters are saved in the "1ucs-A.dat" file
+    selecteds is 'A', then all parameters are saved in the "1ucs-A.dat" file
 
     Args:
         file (str): absolute/relative path for pdb file
