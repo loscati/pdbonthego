@@ -40,6 +40,3 @@ More info about how `parser`, and all other function which uses it, handle these
 
 ### Compatibility
 The package is tested with Python 3.9.5 and `biopython` version 1.79
-
-### TODO
-- [ ] create a `setup.py` file 
