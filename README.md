@@ -10,11 +10,11 @@ Each function has a detailed docstring explaning what it does, arguments and its
 
 ### Installation
 ```bash
-git clone https://github.com/LeonardoSalicari/pdbonthego.git
+git clone https://github.com/loscati/pdbonthego.git
 ```
 
 ### Usage example
-Clone this repository into the project directory
+Clone this repository into the project directory and make sure to let the interpreter know where these scripts are located (e.g. by adding them to the `__path__` variable).
 ```Python
 import parser
 import parameters
