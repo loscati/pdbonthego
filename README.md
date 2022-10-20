@@ -1,4 +1,8 @@
 # PDBontheGō
+
+> **WARNING**:
+> This is an highly experimental package which assumes specific cases when reading PDB files. Use it cautiously. 
+
 Set of functions for extracting parameters from a PDB file to construct a coarse-grained, Gō-model, of the analyzed protein. They allow you to compute: bond lengths, dihedral angles, contact map (gemetrical definition, more details in `contactmap.py`), etc.
 
 The porject is divided into:
