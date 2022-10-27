@@ -3,13 +3,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from .parser import get_residues
+from parser import get_residues
 
 def get_contact_map(
-    file: str, 
-    threshold: float, 
-    altloc: str ='A', 
-    mod:int =0, 
+    file: str,
+    threshold: float,
+    altloc: str ='A',
+    mod:int =0,
     ch: int =0,
     first_to_remove: int =0
     ) -> np.ndarray:
@@ -51,12 +51,12 @@ def get_contact_map(
             stop_res1 = False
             for atom1 in res1:
                 # Contact map takes into account only heavy atoms
-                if atom1.get_name() == 'H':
+                if "H" in atom1.get_name():
                     continue
                 if atom1.is_disordered():
                     atom1.disordered_select(altloc)
                 for atom2 in res2:
-                    if atom2.get_name() == 'H':
+                    if "H" in atom2.get_name():
                         continue
                     if atom2.is_disordered():
                         atom2.disordered_select(altloc)
@@ -66,7 +66,7 @@ def get_contact_map(
                     # TODO:
                     # Mettere opzione per considerare ponti di disofuro
                     # come contatti o meno
-                    
+
                     # Check if the pair of atoms are involved
                     # in a disulfide bond
                     # if (atom1.get_name() == 'SG'
@@ -76,15 +76,6 @@ def get_contact_map(
                     #     continue
 
                     if distance < threshold:
-
-                        ####### DEBUG
-                        # if row == 4 or row == 6 or row == 10:
-                        #     print(f'Residues: ({row+1},{col+1})')
-                        #     print(f'Contact atom from res {row+1}: {atom1.get_name()}')
-                        #     print(f'Contact atom from res {col+1}: {atom2.get_name()}')
-                        #     print(f'Distance (not between CA): {distance:.4f}\n\n')
-                        #######
-
                         Ca1 = res1['CA']
                         Ca2 = res2['CA']
                         if Ca1.is_disordered():
@@ -98,10 +89,6 @@ def get_contact_map(
 
                 if stop_res1:
                     break
-
-    # Obtain standard representation of contact maps, e.g. [noel2016]:
-    # no subtraction of the diag because cm has always zeros in the diag
-    cm = cm + cm.T
     return cm
 
 
