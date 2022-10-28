@@ -1,136 +1,115 @@
+"""Function to compute Hamiltonian parameters such as bond len, angles etc."""
 import math
-from typing import List
 
 import numpy as np
 
 from pdb_parser import get_residues
 
-def get_residue_dists(
-    file: str,
-    altloc: str ='A',
-    mod: int=0,
-    ch: int=0,
-    first_to_remove:int =0
-    ) -> List[List[float]]:
-    '''Distances between C_alpha atoms of subsequent residues
-    This corresponds to harmonic bond terms in the Go-like Hamiltonian
+def get_residue_dists(file, model_id, chain_id, altloc="A", to_include=None, to_ignore=None):
+    """
+    Distances between subsequent C_alpha atoms
 
-    Args:
-        file (str): absolute/relative path for pdb file
-        altloc (str) Specifies the protein configuration
-        mod (int): selects the wanted model (must be => 0)
-        ch (int): selects the wanted chain (must be => 0)
-        first_to_remove (int): number of residues to remove from the beginning
-        of the chain (e.g. because they are added artificially to make the
-        protein crystallize)
+    Parameters
+    ---------
+        See pdb_parser.get_residues for more details
 
-    Returns:
-        list: list of the distances between C_alpha atoms
-    '''
-
-    res_list = get_residues(file, mod, ch, first_to_remove)
+    Returns
+    --------
+        calpha_dists : list[float]
+            List of distances between subsequent C_alpha atoms.
+            Length = number of residues - 1
+    """
+    res_list = get_residues(file, model_id, chain_id, to_include, to_ignore)
     calpha_dists = []
     for i in range(1, len(res_list)):
         Ca0 = res_list[i-1]['CA']
         Ca1 = res_list[i]['CA']
 
-        # Taking the altloc picked by the user
         if Ca0.is_disordered():
             Ca0.disordered_select(altloc)
         if Ca1.is_disordered():
             Ca1.disordered_select(altloc)
 
-        # minus operator has been overwritten to return distances
+        # minus operator has been overloaded to return a distance
         calpha_d = Ca1 - Ca0
         calpha_dists.append(calpha_d)
 
     return calpha_dists
 
+# def get_disulfide_bonds(
+#     file: str,
+#     altloc: str ='A',
+#     mod: int=0,
+#     ch: int=0,
+#     first_to_remove:int =0
+#     ) -> List[float]:
+#     '''Disulfide bridges bond lengths
+#     It search for pair of Cysteines if present in the chain
 
-def get_disulfide_bonds(
-    file: str,
-    altloc: str ='A',
-    mod: int=0,
-    ch: int=0,
-    first_to_remove:int =0
-    ) -> List[float]:
-    '''Disulfide bridges bond lengths
-    It search for pair of Cysteines if present in the chain
+#     Args:
+#         file (str): absolute/relative path for pdb file
+#         altloc (str) Specifies the protein configuration
+#         mod (int): selects the wanted model (must be => 0)
+#         ch (int): selects the wanted chain (must be => 0)
+#         first_to_remove (int): number of residues to remove from the beginning
+#         of the chain (e.g. because they are added artificially to make the
+#         protein crystallize)
 
-    Args:
-        file (str): absolute/relative path for pdb file
-        altloc (str) Specifies the protein configuration
-        mod (int): selects the wanted model (must be => 0)
-        ch (int): selects the wanted chain (must be => 0)
-        first_to_remove (int): number of residues to remove from the beginning
-        of the chain (e.g. because they are added artificially to make the
-        protein crystallize)
+#     Returns:
+#         list: list of disulfide bond lengths
+#     '''
 
-    Returns:
-        list: list of disulfide bond lengths
-    '''
+#     res_list = get_residues(file, mod, ch, first_to_remove)
+#     cys_list = []
+#     # Checking for pairs of Cysteins
+#     for res in res_list:
+#         if res.get_resname() == 'CYS':
+#             cys_list.append(res)
 
-    res_list = get_residues(file, mod, ch, first_to_remove)
-    cys_list = []
-    # Checking for pairs of Cysteins
-    for res in res_list:
-        if res.get_resname() == 'CYS':
-            cys_list.append(res)
+#     n_cys = len(cys_list)
+#     if len(cys_list) <= 1:
+#         # no bonds with only one CYS
+#         return []
 
-    n_cys = len(cys_list)
-    if len(cys_list) <= 1:
-        # no bonds with only one CYS
-        return []
+#     dis_bridges = []
+#     for i in range(n_cys):
+#         for j in range(i+1, n_cys):
+#             SG1 = cys_list[i]['SG']
+#             SG2 = cys_list[j]['SG']
+#             bond_len = SG2 - SG1
+#             # Saving only actual bonds, which have length of about 2.05 AA
+#             if bond_len < 2.15:
+#                 dis_bridges.append(bond_len)
 
-    dis_bridges = []
-    for i in range(n_cys):
-        for j in range(i+1, n_cys):
-            SG1 = cys_list[i]['SG']
-            SG2 = cys_list[j]['SG']
-            bond_len = SG2 - SG1
-            # Saving only actual bonds, which have length of about 2.05 AA
-            if bond_len < 2.15:
-                dis_bridges.append(bond_len)
+#     return dis_bridges
 
-    return dis_bridges
+def get_residues_angles(file, model_id, chain_id, degrees=True, altloc="A", to_include=None, to_ignore=None):
+    r"""
+    Angles form by three subsequent C_alpha atoms
 
-
-def get_residues_angles(
-    file: str,
-    altloc: str ='A',
-    mod: int=0,
-    ch: int=0,
-    first_to_remove:int =0,
-    degrees: bool =True
-    ) -> List[float]:
-    '''Angles between successive residues, hence C_alpha
-
-    Angle definition involves three successive C_alphas and makes use of the
-    dot product:
+    Let:
     vec{dr} = vec{C_alpha^{i}} - vec{C_alpha^{i-1}}
     vec{dp} = vec{C_alpha^{i+1}} - vec{C_alpha^{i}}
     theta_i^0 = pi - acos( (dr_{i-1,i} \dot dr_{i,i+1})/modules )
 
     pi - acos() is used because we do not need the angle as defined by the
-    dot product, instead we seek the angle form by the 'bending' of two
-    subsequent residues (described by their C_alpha).
+    dot product. Instead, we seek the angle formed by the 'bending' of two
+    subsequent C_alpha.
 
-    Args:
-        file (str): absolute/relative path for pdb file
-        altloc (str) Specifies the protein configuration
-        mod (int): selects the wanted model (must be => 0)
-        ch (int): selects the wanted chain (must be => 0)
-        first_to_remove (int): number of residues to remove from the beginning
-        of the chain (e.g. because they are added artificially to make the
-        protein crystallize)
-        degrees (bool): choose between radians and degrees, if set to False
-        the result will be in radians
+    Parameters
+    ---------
+        See pdb_parser.get_residues for more details
+        degrees : bool
+            Choose between radians and degrees, if False
+            the result will be in radians. Default: True
 
-    Returns:
-        list: list of angles in radians or degrees
-    '''
-
-    res_list = get_residues(file, mod, ch, first_to_remove)
+    Returns
+    --------
+        angles : List[float]
+            list of angles in radians or degrees.
+            Length = number of residues - 2
+    """
+    res_list = get_residues(file, model_id, chain_id, to_include, to_ignore)
     angles = []
     for i in range(1, len(res_list) - 1):
         Ca0 = res_list[i-1]['CA']
@@ -161,36 +140,25 @@ def get_residues_angles(
 
     return angles
 
-
-def get_residues_dih(
-    file: str,
-    altloc: str ='A',
-    mod: int=0,
-    ch: int=0,
-    first_to_remove:int =0,
-    degrees: bool =True
-    ) -> List[float]:
-    '''Dihedral angles between successive residues
+def get_residues_dih(file, model_id, chain_id, degrees=True, altloc="A", to_include=None, to_ignore=None):
+    """
+    Dihedral angles between successive residues
 
     For details about the computation see:
     https://en.wikipedia.org/wiki/Dihedral_angle#In_polymer_physics
 
-    Args:
-        file (str): absolute/relative path for pdb file
-        altloc (str) Specifies the protein configuration
-        mod (int): selects the wanted model (must be => 0)
-        ch (int): selects the wanted chain (must be => 0)
-        first_to_remove (int): number of residues to remove from the beginning
-        of the chain (e.g. because they are added artificially to make the
-        protein crystallize)
-        degrees (bool): choose between radians and degrees, if set to False
-        the result will be in radians
+    Parameters
+    --------
+        See get_residues_angles for more info
 
-    Returns:
-        list: list of dihedral angles in radians or degrees
-    '''
+    Returns
+    --------
+        dihedrals : List[float]
+            list of dihedral angles in radians or degrees.
+            Length = number of residues - 3
+    """
 
-    res_list = get_residues(file, mod, ch, first_to_remove)
+    res_list = get_residues(file, model_id, chain_id, to_include, to_ignore)
     dihedrals = []
     for i in range(2, len(res_list) - 1):
         Ca0 = res_list[i-2]['CA']
@@ -198,7 +166,6 @@ def get_residues_dih(
         Ca2 = res_list[i]['CA']
         Ca3 = res_list[i+1]['CA']
 
-        # Taking the altloc picked by the user
         if Ca0.is_disordered():
             Ca0.disordered_select(altloc)
         if Ca1.is_disordered():
@@ -226,55 +193,28 @@ def get_residues_dih(
     return dihedrals
 
 
-def save_parameters(
-    file: str,
-    altloc: str ='A',
-    mod: int=0,
-    ch: int=0,
-    first_to_remove:int =0,
-    degrees: bool =True
-    ) -> None:
-    '''Save on a .dat file all parameters for the Go-like hamiltonian.
-    For example is the pdb file name is "1ucs.pdb" and the configuration
-    selecteds is 'A', then all parameters are saved in the "1ucs-A.dat" file
+def save_parameters(file, model_id, chain_id, degrees=True, altloc="A", to_include=None, to_ignore=None):
+    """
+    Save on a .dat file all parameters for the Go-like hamiltonian
 
-    Args:
-        file (str): absolute/relative path for pdb file
-        threshold (float): max distance for which two heavy atoms are considered
-        'in contact'
-        altloc (str) Specifies the protein configuration
-        mod (int): selects the wanted model (must be => 0)
-        ch (int): selects the wanted chain (must be => 0)
-        first_to_remove (int): number of residues to remove from the beginning
-        of the chain (e.g. because they are added artificially to make the
-        protein crystallize)
-        degrees (bool): choose between radians and degrees, if set to False
-        the result will be in radians
-
-    Returns:
-        None
-    '''
-
-    res_list = get_residues(file, mod, ch, first_to_remove)
-    dist = get_residue_dists(file, altloc=altloc,
-                            first_to_remove=first_to_remove)
-    disulfide = get_disulfide_bonds(file, altloc=altloc,
-                                    first_to_remove=first_to_remove)
-    angles = get_residues_angles(file, altloc=altloc,
-                                first_to_remove=first_to_remove,
-                                degrees=degrees)
-    dih = get_residues_dih(file, altloc=altloc,
-                            first_to_remove=first_to_remove,
-                            degrees=degrees)
-    # contact_map = get_contact_map(file, altloc=altloc,
-    #                               threshold=threshold,
-    #                               first_to_remove=first_to_remove)
+    Parameters
+    --------
+        See get_residues_angles for more info
+    """
+    res_list = get_residues(file, model_id, chain_id, to_include, to_ignore)
+    dist = get_residue_dists(file, model_id, chain_id, to_include, to_ignore)
+    # disulfide = get_disulfide_bonds(file, altloc=altloc,
+    #                                 first_to_remove=first_to_remove)
+    angles = get_residues_angles(file, model_id, chain_id, degrees, to_include, to_ignore)
+    dih = get_residues_dih(file, model_id, chain_id, to_include, to_ignore)
 
     name_protein = file[-8:-4] # get unique protein ID of 4 characters
-    
-    with open(f'{name_protein}-{altloc}.dat', 'w', encoding="utf-8") as fout:
+    with open(f'{name_protein}.dat', 'w', encoding="utf-8") as fout:
         # Info about the file
-        fout.write(f'INFO\nProtein: {name_protein},\nAltloc: {altloc},\nNumber of residues removed in the beginning: {first_to_remove},\nModel number: {mod},\nChain number: {ch},\n')
+        fout.write(
+            f'# INFO\n# Protein: {name_protein},\n# Altloc: {altloc},\n\
+            # Model number: {model_id},\n# Chain number: {chain_id},\n# degrees: {degrees}')
+
         fout.write('Sequence:\n')
         for res in res_list:
             fout.write(f'{res.get_resname()} ')
@@ -287,11 +227,11 @@ def save_parameters(
             fout.write(f'{d:.3f}, ')
         fout.write(']\n\n')
 
-        fout.write('Disulfide bond lengths (Angstroms):\n')
-        fout.write('[')
-        for d in disulfide:
-            fout.write(f'{d:.3f}, ')
-        fout.write(']\n\n')
+        # fout.write('Disulfide bond lengths (Angstroms):\n')
+        # fout.write('[')
+        # for d in disulfide:
+        #     fout.write(f'{d:.3f}, ')
+        # fout.write(']\n\n')
 
         fout.write('Angles between residues (degrees):\n')
         fout.write('[')
@@ -304,9 +244,6 @@ def save_parameters(
         for d in dih:
             fout.write(f'{d:.3f}, ')
         fout.write(']\n\n')
-
-    return None
-
 
 if __name__ == '__main__':
     pass
