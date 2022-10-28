@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 
-from parser import get_residues
+from pdb_parser import get_residues
 
 def get_residue_dists(
     file: str,

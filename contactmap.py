@@ -1,50 +1,46 @@
+"""Compute and draw the interaction matrix, or contact map from a PDB structure"""
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from parser import get_residues
+from pdb_parser import get_residues
 
-def get_contact_map(
-    file: str,
-    threshold: float,
-    altloc: str ='A',
-    mod:int =0,
-    ch: int =0,
-    first_to_remove: int =0
-    ) -> np.ndarray:
-    '''2D map of distances between C_alphas which have, in their residue, at
-    least a pair of heavy atoms closer than threshold
+def get_contact_map(file, model_id, chain_id, threshold, altloc="A", to_include=None, to_ignore=None):
+    """
+    Matrix with the interaction network, or contact map, extracted
+    from a PDb structure. The contact definition is purely geometric.
+    Two residues are said to be in contact if at least one pair of
+    non-hydrogen atoms is spatially closer than the threshold.
 
-    From the contact map, disulfide bridges are excluded
+    The matrix entry is the distance between the alpha carbons of the
+    respective residues.
 
-    Args:
-        file (str): absolute/relative path for pdb file
-        threshold (float): max distance for which two heavy atoms are considered
-        'in contact'
-        altloc (str) Specifies the protein configuration
-        mod (int): selects the wanted model (must be => 0)
-        ch (int): selects the wanted chain (must be => 0)
-        first_to_remove (int): number of residues to remove from the beginning
-        of the chain (e.g. because they are added artificially to make the
-        protein crystallize)
+    Disulfide bridges are not considered.
 
-    Retuns:
-        2D numpy array: a 2 dimentional numpy array containg C_alpha distances
-        of residues 'in contact'. All dimentions are equal to the number of
-        residues in the protein. Following the convention, the diagonal is
-        placed from bottom left to top right; where the first residue pair is
-        placed at the bottom left. Moreover, the matrix is symmetric w.r.t.
-        the anti-diagonal
-    '''
-    res_list = get_residues(file, mod, ch, first_to_remove)
-    n = len(res_list)
-    cm = np.zeros((n,n))
+    Parameters
+    --------
+        See pdb_parser.get_residues for more details
+        threshold : float
+            Distance below which two non-hydrogen atoms are considered in contact
+        altloc : str
+            Alternative location for disordered atoms. Default: 'A'
+
+    Returns
+    -------
+        contact_map : array_like
+            Two dimensional numpy array with entries the alpha carbon distances
+            of contacting residues. All dimensions are equal to the number of
+            residues in the protein
+    """
+    res_list = get_residues(file, model_id, chain_id, to_include, to_ignore)
+    n_residues = len(res_list)
+    contact_map = np.zeros((n_residues,n_residues))
 
     # Contacts are computed between residues which are separated by at least
     # three other residues in the polypeptide chain [noel2012]
-    for row in range(0, n-4):
-        for col in range(row+4, n):
+    for row in range(0, n_residues-4):
+        for col in range(row+4, n_residues):
 
             res1 = res_list[row]
             res2 = res_list[col]
@@ -61,20 +57,10 @@ def get_contact_map(
                     if atom2.is_disordered():
                         atom2.disordered_select(altloc)
 
+                    # the minus operator between Bio.PDB.Atom.Atom
+                    # objects is overloaded to return the distance
+                    # between them
                     distance = atom1 - atom2
-
-                    # TODO:
-                    # Mettere opzione per considerare ponti di disofuro
-                    # come contatti o meno
-
-                    # Check if the pair of atoms are involved
-                    # in a disulfide bond
-                    # if (atom1.get_name() == 'SG'
-                    #     and atom2.get_name() == 'SG'):
-                    #     print(distance)
-                    #     print('PONTE')
-                    #     continue
-
                     if distance < threshold:
                         Ca1 = res1['CA']
                         Ca2 = res2['CA']
@@ -83,13 +69,12 @@ def get_contact_map(
                         if Ca2.is_disordered():
                             Ca2.disordered_select(altloc)
 
-                        cm[row,col] = Ca2 - Ca1
+                        contact_map[row,col] = Ca2 - Ca1
                         stop_res1 = True
                         break
-
                 if stop_res1:
                     break
-    return cm
+    return contact_map
 
 
 def visualize_contact_map(
