@@ -3,13 +3,13 @@ from typing import List
 
 import numpy as np
 
-from .parser import get_residues
+from pdb_parser import get_residues
 
 def get_residue_dists(
-    file: str, 
-    altloc: str ='A', 
-    mod: int=0, 
-    ch: int=0, 
+    file: str,
+    altloc: str ='A',
+    mod: int=0,
+    ch: int=0,
     first_to_remove:int =0
     ) -> List[List[float]]:
     '''Distances between C_alpha atoms of subsequent residues
@@ -48,10 +48,10 @@ def get_residue_dists(
 
 
 def get_disulfide_bonds(
-    file: str, 
-    altloc: str ='A', 
-    mod: int=0, 
-    ch: int=0, 
+    file: str,
+    altloc: str ='A',
+    mod: int=0,
+    ch: int=0,
     first_to_remove:int =0
     ) -> List[float]:
     '''Disulfide bridges bond lengths
@@ -96,10 +96,10 @@ def get_disulfide_bonds(
 
 
 def get_residues_angles(
-    file: str, 
-    altloc: str ='A', 
-    mod: int=0, 
-    ch: int=0, 
+    file: str,
+    altloc: str ='A',
+    mod: int=0,
+    ch: int=0,
     first_to_remove:int =0,
     degrees: bool =True
     ) -> List[float]:
@@ -163,10 +163,10 @@ def get_residues_angles(
 
 
 def get_residues_dih(
-    file: str, 
-    altloc: str ='A', 
-    mod: int=0, 
-    ch: int=0, 
+    file: str,
+    altloc: str ='A',
+    mod: int=0,
+    ch: int=0,
     first_to_remove:int =0,
     degrees: bool =True
     ) -> List[float]:
@@ -227,11 +227,11 @@ def get_residues_dih(
 
 
 def save_parameters(
-    file: str, 
-    altloc: str ='A', 
-    mod: int=0, 
-    ch: int=0, 
-    first_to_remove:int =0, 
+    file: str,
+    altloc: str ='A',
+    mod: int=0,
+    ch: int=0,
+    first_to_remove:int =0,
     degrees: bool =True
     ) -> None:
     '''Save on a .dat file all parameters for the Go-like hamiltonian.
@@ -272,7 +272,7 @@ def save_parameters(
 
     name_protein = file[-8:-4] # get unique protein ID of 4 characters
     
-    with open(f'{name_protein}-{altloc}.dat', 'w') as fout:
+    with open(f'{name_protein}-{altloc}.dat', 'w', encoding="utf-8") as fout:
         # Info about the file
         fout.write(f'INFO\nProtein: {name_protein},\nAltloc: {altloc},\nNumber of residues removed in the beginning: {first_to_remove},\nModel number: {mod},\nChain number: {ch},\n')
         fout.write('Sequence:\n')
