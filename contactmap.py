@@ -46,13 +46,16 @@ def get_contact_map(file, model_id, chain_id, threshold, altloc="A", to_include=
             res2 = res_list[col]
             stop_res1 = False
             for atom1 in res1:
-                # Contact map takes into account only heavy atoms
-                if "H" in atom1.get_name():
+                # Contact map takes into account only heavy atoms.
+                # In PDBs, Hydrogen are highlighted by a string with
+                # initial char equal to H. But there are atoms such as
+                # Oxygen in ARG that are identified as OH
+                if atom1.get_name().startswith("H"):
                     continue
                 if atom1.is_disordered():
                     atom1.disordered_select(altloc)
                 for atom2 in res2:
-                    if "H" in atom2.get_name():
+                    if atom2.get_name().startswith("H"):
                         continue
                     if atom2.is_disordered():
                         atom2.disordered_select(altloc)
@@ -92,7 +95,7 @@ def visualize_contact_map(
 
     Returns:
         Matplotlib Figure object
-    ''' 
+    '''
     matplotlib.rcParams.update({
         'font.size': 30,
         'text.usetex': True
@@ -112,7 +115,7 @@ def visualize_contact_map(
         # x ticks and labels
         ax.set_xticks([i for i in range(4, res_n, 5)])
         ax.set_xticklabels([i for i in range(5, res_n, 5)], fontsize=20)
-        
+
         # Obtain standard representation of contact maps, e.g. [noel2016]:
         im = ax.imshow(cm[::-1,:], cmap=cmap)
     else:
